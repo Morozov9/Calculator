@@ -1,0 +1,124 @@
+using System.Text;
+
+public class NumberSystemConverter
+{
+    private const string Digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ";
+    
+    /// <summary>
+    /// Переводит число из любой системы счисления (до 50-ричной) в 50-ричную систему
+    /// </summary>
+    /// <param name="number">Исходное число в виде строки</param>
+    /// <param name="fromBase">Исходная система счисления (2-50)</param>
+    /// <returns>Число в 50-ричной системе счисления</returns>
+    public static string ToBase50(string number, int fromBase)
+    {
+        if (fromBase < 2 || fromBase > 50)
+            throw new ArgumentException("Система счисления должна быть от 2 до 50", nameof(fromBase)); // делаем ошибку по красивому
+        
+        if (string.IsNullOrWhiteSpace(number))
+            throw new ArgumentException("Число не может быть пустым", nameof(number)); // делаем ошибку по красивому
+        
+        // Преобразуем в верхний регистр для единообразия
+        number = number.ToUpper();
+        
+        // Проверяем корректность цифр
+        foreach (char digit in number)
+        {
+            if (Digits.IndexOf(digit) >= fromBase || Digits.IndexOf(digit) == -1)
+                throw new ArgumentException($"Некорректная цифра '{digit}' для системы счисления с основанием {fromBase}");
+        }
+        
+        // Преобразуем в десятичную систему
+        long decimalValue = ToDecimal(number, fromBase);
+        
+        // Преобразуем из десятичной в 50-ричную
+        return FromDecimal(decimalValue, 50);
+    }
+    
+    /// <summary>
+    /// Преобразует число из заданной системы счисления в десятичную
+    /// </summary>
+    private static long ToDecimal(string number, int fromBase)
+    {
+        long result = 0;
+        long power = 1;
+        
+        // Проходим по цифрам справа налево
+        for (int i = number.Length - 1; i >= 0; i--)
+        {
+            char digit = number[i];
+            int digitValue = Digits.IndexOf(digit);
+            
+            if (digitValue == -1 || digitValue >= fromBase)
+                throw new ArgumentException($"Некорректная цифра '{digit}'");
+            
+            result += digitValue * power;
+            power *= fromBase;
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// Преобразует десятичное число в заданную систему счисления
+    /// </summary>
+    private static string FromDecimal(long decimalNumber, int toBase)
+    {
+        if (decimalNumber == 0)
+            return "0";
+        
+        var result = new StringBuilder();
+        long number = decimalNumber;
+        
+        while (number > 0)
+        {
+            int remainder = (int)(number % toBase);
+            result.Insert(0, Digits[remainder]);
+            number /= toBase;
+        }
+        
+        return result.ToString();
+    }
+    
+    /// <summary>
+    /// Пример использования
+    /// </summary>
+    public static void Main()
+    {
+        try
+        {
+            // Примеры перевода
+            Console.WriteLine("Примеры перевода в 50-ричную систему:");
+            
+            // Из 10-ричной в 50-ричную
+            string result1 = ToBase50("12345", 10);
+            Console.WriteLine($"12345 (10) = {result1} (50)");
+            
+            // Из 16-ричной в 50-ричную
+            string result2 = ToBase50("FFA1", 16);
+            Console.WriteLine($"FFA1 (16) = {result2} (50)");
+            
+            // Из 2-ричной в 50-ричную
+            string result3 = ToBase50("110101", 2);
+            Console.WriteLine($"110101 (2) = {result3} (50)");
+            
+            // Из 36-ричной в 50-ричную
+            string result4 = ToBase50("XYZ", 36);
+            Console.WriteLine($"XYZ (36) = {result4} (50)");
+            
+            // Можно ввести свои значения
+            Console.WriteLine("\nВведите число:");
+            string inputNumber = Console.ReadLine();
+            
+            Console.WriteLine("Введите исходную систему счисления (2-50):");
+            int inputBase = int.Parse(Console.ReadLine());
+            
+            string result = ToBase50(inputNumber, inputBase);
+            Console.WriteLine($"Результат: {inputNumber} ({inputBase}) = {result} (50)");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка: {ex.Message}");
+        }
+    }
+}
